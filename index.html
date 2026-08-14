@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plants vs Zombies Mini</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(#76c893, #2d6a4f);
+    color: white;
+    text-align: center;
+    overflow-x: hidden;
+}
+
+h1 {
+    margin: 15px 0 5px;
+    text-shadow: 3px 3px #333;
+}
+
+#gameInfo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 10px;
+    flex-wrap: wrap;
+}
+
+.info {
+    background: #333;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#restart {
+    background: #e63946;
+    color: white;
+}
+
+#game {
+    width: 900px;
+    max-width: 95vw;
+    height: 500px;
+    margin: 15px auto;
+    position: relative;
+    overflow: hidden;
+    border: 8px solid #5c3d20;
+    border-radius: 12px;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            #6ab04c 0px,
+            #6ab04c 95px,
+            #78c850 95px,
+            #78c850 190px
+        );
+}
+
+/* Grid */
+.cell {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+/* Tanaman */
+.plant {
+    position: absolute;
+    width: 75px;
+    height: 75px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 52px;
+    z-index: 5;
+    user-select: none;
+}
+
+/* Zombie */
+.zombie {
+    position: absolute;
+    width: 75px;
+    height: 80px;
+    font-size: 52px;
+    z-index: 6;
+    text-align: center;
+    user-select: none;
+}
+
+.zombieHP {
+    position: absolute;
+    top: -8px;
+    left: 5px;
+    width: 65px;
+    height: 7px;
+    background: red;
+    border-radius: 5px;
+}
+
+.zombieHPBar {
+    width: 100%;
+    height: 100%;
+    background: limegreen;
+    border-radius: 5px;
+}
+
+/* Peluru */
+.pea {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #9cff00;
+    border: 2px solid #237a00;
+    z-index: 4;
+}
+
+/* Matahari */
+.sun {
+    position: absolute;
+    font-size: 32px;
+    cursor: pointer;
+    z-index: 20;
+    animation: sunDrop 0.4s ease-out;
+}
+
+@keyframes sunDrop {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+/* Panel tanaman */
+#shop {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 10px auto;
+    flex-wrap: wrap;
+}
+
+.card {
+    width: 110px;
+    background: #386641;
+    border: 3px solid #f2e8cf;
+    border-radius: 10px;
+    padding: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card.selected {
+    border-color: yellow;
+    box-shadow: 0 0 15px yellow;
+}
+
+.card .emoji {
+    font-size: 35px;
+}
+
+.card .price {
+    color: #ffd166;
+    font-weight: bold;
+}
+
+/* Pesan */
+#message {
+    position: absolute;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+}
+
+#message h2 {
+    font-size: 45px;
+    margin: 10px;
+}
+
+#message p {
+    font-size: 20px;
+}
+
+.instructions {
+    margin: 10px auto 20px;
+    max-width: 900px;
+    background: rgba(0,0,0,0.35);
+    padding: 10px;
+    border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🌱 Plants vs Zombies Mini 🧟</h1>
+
+<div id="gameInfo">
+    <div class="info">☀️ Matahari: <span id="sunCount">150</span></div>
+    <div class="info">🏆 Skor: <span id="score">0</span></div>
+    <div class="info">🌊 Gelombang: <span id="wave">1</span></div>
+    <button id="restart" onclick="restartGame()">🔄 Mulai Ulang</button>
+</div>
+
+<div id="shop">
+
+    <div class="card selected" data-type="peashooter">
+        <div class="emoji">🌱</div>
+        <div>Penembak</div>
+        <div class="price">☀️ 100</div>
+    </div>
+
+    <div class="card" data-type="wall">
+        <div class="emoji">🥔</div>
+        <div>Kacang Tahan</div>
+        <div class="price">☀️ 50</div>
+    </div>
+
+    <div class="card" data-type="sunflower">
+        <div class="emoji">🌻</div>
+        <div>Bunga Matahari</div>
+        <div class="price">☀️ 50</div>
+    </div>
+
+</div>
+
+<div id="game"></div>
+
+<div class="instructions">
+    🌱 Pilih tanaman → klik kotak rumput untuk menanam.<br>
+    ☀️ Klik matahari untuk mengumpulkannya. Jangan biarkan zombie mencapai kiri!
+</div>
+
+<div id="message">
+    <h2 id="messageTitle"></h2>
+    <p id="messageText"></p>
+    <button onclick="restartGame()">🔄 Main Lagi</button>
+</div>
+
+<script>
+/* =========================
+   KONFIGURASI GAME
+========================= */
+
+const game = document.getElementById("game");
+
+const ROWS = 5;
+const COLS = 9;
+const CELL_W = 100;
+const CELL_H = 100;
+
+let sun = 150;
+let score = 0;
+let wave = 1;
+
+let selectedPlant = "peashooter";
+
+let plants = [];
+let zombies = [];
+let peas = [];
+let suns = [];
+
+let gameOver = false;
+let zombieTimer;
+let sunTimer;
+
+
+/* =========================
+   MEMBUAT GRID
+========================= */
+
+function createGrid() {
+
+    game.innerHTML = "";
+
+    for (let row = 0; row < ROWS; row++) {
+
+        for (let col = 0; col < COLS; col++) {
+
+            const cell = document.createElement("div");
+
+            cell.className = "cell";
+
+            cell.style.left = col * CELL_W + "px";
+            cell.style.top = row * CELL_H + "px";
+
+            cell.dataset.row = row;
+            cell.dataset.col = col;
+
+            cell.addEventListener("click", plantAtCell);
+
+            game.appendChild(cell);
+        }
+    }
+}
+
+
+/* =========================
+   PILIH TANAMAN
+========================= */
+
+document.querySelectorAll(".card").forEach(card => {
+
+    card.addEventListener("click", () => {
+
+        document.querySelectorAll(".card")
+            .forEach(c => c.classList.remove("selected"));
+
+        card.classList.add("selected");
+
+        selectedPlant = card.dataset.type;
+    });
+
+});
+
+
+/* =========================
+   HARGA TANAMAN
+========================= */
+
+function getPlantCost(type) {
+
+    if (type === "peashooter") return 100;
+    if (type === "wall") return 50;
+    if (type === "sunflower") return 50;
+
+}
+
+
+/* =========================
+   TANAM TANAMAN
+========================= */
+
+function plantAtCell(e) {
+
+    if (gameOver) return;
+
+    const row = Number(e.currentTarget.dataset.row);
+    const col = Number(e.currentTarget.dataset.col);
+
+    // Tidak boleh menanam di kolom terakhir
+    if (col >= COLS - 1) return;
+
+    // Cek apakah sudah ada tanaman
+    const already = plants.find(
+        p => p.row === row && p.col === col
+    );
+
+    if (already) return;
+
+    const cost = getPlantCost(selectedPlant);
+
+    if (sun < cost) {
+
+        alert("Matahari tidak cukup!");
+
+        return;
+    }
+
+    sun -= cost;
+
+    updateInfo();
+
+    createPlant(row, col, selectedPlant);
+}
+
+
+/* =========================
+   MEMBUAT TANAMAN
+========================= */
+
+function createPlant(row, col, type) {
+
+    const element = document.createElement("div");
+
+    element.className = "plant";
+
+    let emoji = "🌱";
+    let hp = 100;
+
+    if (type === "peashooter") {
+        emoji = "🌱";
+        hp = 100;
+    }
+
+    if (type === "wall") {
+        emoji = "🥔";
+        hp = 300;
+    }
+
+    if (type === "sunflower") {
+        emoji = "🌻";
+        hp = 80;
+    }
+
+    element.textContent = emoji;
+
+    element.style.left = col * CELL_W + 12 + "px";
+    element.style.top = row * CELL_H + 10 + "px";
+
+    game.appendChild(element);
+
+    const plant = {
+        row,
+        col,
+        type,
+        hp,
+        element,
+        lastShot: 0,
+        lastSun: Date.now()
+    };
+
+    plants.push(plant);
+}
+
+
+/* =========================
+   ZOMBIE
+========================= */
+
+function createZombie() {
+
+    if (gameOver) return;
+
+    const row = Math.floor(Math.random() * ROWS);
+
+    const element = document.createElement("div");
+
+    element.className = "zombie";
+    element.textContent = "🧟";
+
+    element.style.left = (COLS * CELL_W - 60) + "px";
+    element.style.top = row * CELL_H + 10 + "px";
+
+    const hpBar = document.createElement("div");
+
+    hpBar.className = "zombieHP";
+
+    const hpInner = document.createElement("div");
+
+    hpInner.className = "zombieHPBar";
+
+    hpBar.appendChild(hpInner);
+
+    element.appendChild(hpBar);
+
+    game.appendChild(element);
+
+    const zombie = {
+        row,
+        x: COLS * CELL_W - 60,
+        hp: 100 + wave * 20,
+        maxHp: 100 + wave * 20,
+        speed: 0.25 + Math.random() * 0.12,
+        damage: 0.15,
+        element,
+        hpBar: hpInner
+    };
+
+    zombies.push(zombie);
+}
+
+
+/* =========================
+   PELURU
+========================= */
+
+function createPea(plant) {
+
+    const element = document.createElement("div");
+
+    element.className = "pea";
+
+    element.style.left =
+        plant.col * CELL_W + 65 + "px";
+
+    element.style.top =
+        plant.row * CELL_H + 40 + "px";
+
+    game.appendChild(element);
+
+    peas.push({
+
+        row: plant.row,
+
+        x: plant.col * CELL_W + 65,
+
+        y: plant.row * CELL_H + 40,
+
+        damage: 25,
+
+        speed: 4,
+
+        element
+    });
+}
+
+
+/* =========================
+   UPDATE TANAMAN
+========================= */
+
+function updatePlants() {
+
+    const now = Date.now();
+
+    plants.forEach(plant => {
+
+        if (plant.type === "peashooter") {
+
+            const enemy = zombies.some(
+                z => z.row === plant.row &&
+                     z.x > plant.col * CELL_W
+            );
+
+            if (enemy && now - plant.lastShot > 1200) {
+
+                createPea(plant);
+
+                plant.lastShot = now;
+            }
+        }
+
+        if (plant.type === "sunflower") {
+
+            if (now - plant.lastSun > 7000) {
+
+                createSun(
+                    plant.col * CELL_W + 30,
+                    plant.row * CELL_H + 20
+                );
+
+                plant.lastSun = now;
+            }
+        }
+    });
+}
+
+
+/* =========================
+   UPDATE PELURU
+========================= */
+
+function updatePeas() {
+
+    peas.forEach((pea, peaIndex) => {
+
+        pea.x += pea.speed;
+
+        pea.element.style.left = pea.x + "px";
+
+        // Hapus jika keluar layar
+        if (pea.x > COLS * CELL_W) {
+
+            pea.element.remove();
+
+            peas.splice(peaIndex, 1);
+
+            return;
+        }
+
+        // Cek tabrakan dengan zombie
+        for (let i = 0; i < zombies.length; i++) {
+
+            const zombie = zombies[i];
+
+            if (
+                zombie.row === pea.row &&
+                pea.x > zombie.x &&
+                pea.x < zombie.x + 70
+            ) {
+
+                zombie.hp -= pea.damage;
+
+                zombie.hpBar.style.width =
+                    Math.max(
+                        0,
+                        zombie.hp / zombie.maxHp * 100
+                    ) + "%";
+
+                pea.element.remove();
+
+                peas.splice(peaIndex, 1);
+
+                if (zombie.hp <= 0) {
+
+                    zombie.element.remove();
+
+                    zombies.splice(i, 1);
+
+                    score += 10;
+
+                    updateInfo();
+                }
+
+                break;
+            }
+        }
+    });
+}
+
+
+/* =========================
+   UPDATE ZOMBIE
+========================= */
+
+function updateZombies() {
+
+    zombies.forEach((zombie, index) => {
+
+        const blockingPlant = plants.find(
+            p =>
+                p.row === zombie.row &&
+                zombie.x < p.col * CELL_W + 70 &&
+                zombie.x > p.col * CELL_W - 40
+        );
+
+        if (blockingPlant) {
+
+            blockingPlant.hp -= zombie.damage;
+
+            if (blockingPlant.hp <= 0) {
+
+                blockingPlant.element.remove();
+
+                plants.splice(
+                    plants.indexOf(blockingPlant),
+                    1
+                );
+            }
+
+        } else {
+
+            zombie.x -= zombie.speed;
+        }
+
+        zombie.element.style.left = zombie.x + "px";
+
+        // Zombie mencapai rumah
+        if (zombie.x < -30) {
+
+            endGame(false);
+        }
+    });
+}
+
+
+/* =========================
+   MATAHARI
+========================= */
+
+function createSun(x = null, y = null) {
+
+    const element = document.createElement("div");
+
+    element.className = "sun";
+    element.textContent = "☀️";
+
+    if (x === null) {
+        x = Math.random() * (COLS * CELL_W - 50);
+        y = Math.random() * (ROWS * CELL_H - 50);
+    }
+
+    element.style.left = x + "px";
+    element.style.top = y + "px";
+
+    game.appendChild(element);
+
+    const sunObject = {
+        element
+    };
+
+    suns.push(sunObject);
+
+    element.addEventListener("click", () => {
+
+        sun += 25;
+
+        updateInfo();
+
+        element.remove();
+
+        const index = suns.indexOf(sunObject);
+
+        if (index !== -1) {
+            suns.splice(index, 1);
+        }
+    });
+}
+
+
+/* =========================
+   UPDATE INFO
+========================= */
+
+function updateInfo() {
+
+    document.getElementById("sunCount")
+        .textContent = sun;
+
+    document.getElementById("score")
+        .textContent = score;
+
+    document.getElementById("wave")
+        .textContent = wave;
+}
+
+
+/* =========================
+   GELOMBANG ZOMBIE
+========================= */
+
+let zombieCount = 0;
+
+function spawnWave() {
+
+    zombieCount++;
+
+    createZombie();
+
+    if (zombieCount % 10 === 0) {
+
+        wave++;
+
+        updateInfo();
+    }
+}
+
+
+/* =========================
+   GAME LOOP
+========================= */
+
+function gameLoop() {
+
+    if (gameOver) return;
+
+    updatePlants();
+    updatePeas();
+    updateZombies();
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+/* =========================
+   TIMER
+========================= */
+
+function startTimers() {
+
+    clearInterval(zombieTimer);
+    clearInterval(sunTimer);
+
+    zombieTimer = setInterval(() => {
+
+        spawnWave();
+
+    }, Math.max(1200, 4000 - wave * 150));
+
+
+    sunTimer = setInterval(() => {
+
+        createSun();
+
+    }, 5000);
+}
+
+
+/* =========================
+   GAME OVER / WIN
+========================= */
+
+function endGame(win) {
+
+    if (gameOver) return;
+
+    gameOver = true;
+
+    clearInterval(zombieTimer);
+    clearInterval(sunTimer);
+
+    const message = document.getElementById("message");
+
+    const title = document.getElementById("messageTitle");
+
+    const text = document.getElementById("messageText");
+
+    message.style.display = "flex";
+
+    if (win) {
+
+        title.textContent = "🎉 KAMU MENANG!";
+
+        text.textContent =
+            "Semua zombie berhasil dikalahkan!";
+
+    } else {
+
+        title.textContent = "💀 GAME OVER!";
+
+        text.textContent =
+            "Zombie berhasil mencapai rumah!";
+    }
+}
+
+
+/* =========================
+   RESTART
+========================= */
+
+function restartGame() {
+
+    clearInterval(zombieTimer);
+    clearInterval(sunTimer);
+
+    sun = 150;
+    score = 0;
+    wave = 1;
+    zombieCount = 0;
+
+    gameOver = false;
+
+    plants = [];
+    zombies = [];
+    peas = [];
+    suns = [];
+
+    document.getElementById("message")
+        .style.display = "none";
+
+    createGrid();
+
+    updateInfo();
+
+    // Matahari awal
+    createSun(150, 120);
+    createSun(450, 300);
+
+    startTimers();
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+/* =========================
+   MULAI GAME
+========================= */
+
+restartGame();
+
+</script>
+
+</body>
+</html>
